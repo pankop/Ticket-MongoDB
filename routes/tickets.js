@@ -5,17 +5,28 @@ const Ticket = require("../models/Ticket");
 const router = express.Router();
 
 // Create Ticket
-router.post("/", auth, async (req, res) => {
-  const { title, description, status } = req.body;
-  try {
-    const newTicket = new Ticket({ title, description, status });
-    const ticket = await newTicket.save();
-    res.json(ticket);
-  } catch (err) {
-    console.error(err.message);
-    res.status(500).send("Server error");
-  }
-});
+router.post(
+    "/",
+    auth, // Gunakan middleware auth untuk melindungi route ini
+    async (req, res) => {
+      try {
+        const { title, description } = req.body;
+
+        // Membuat tiket baru
+        const ticket = new Ticket({
+          title,
+          description,
+          user: req.user.id, // user.id didapat dari token
+        });
+
+        await ticket.save();
+        res.status(201).json({ msg: "Ticket created successfully", ticket });
+      } catch (err) {
+        console.error(err.message);
+        res.status(500).send("Server error");
+      }
+    }
+  );
 
 // Get All Tickets
 router.get("/", auth, async (req, res) => {
@@ -61,8 +72,8 @@ router.delete("/:id", auth, async (req, res) => {
       return res.status(404).json({ msg: "Ticket not found" });
     }
 
-    await Ticket.findByIdAndRemove(req.params.id);
-    res.json({ msg: "Ticket removed" });
+    await Ticket.findByIdAndDelete(req.params.id);
+    res.json({ msg: "Ticket has been removed" });
   } catch (err) {
     console.error(err.message);
     res.status(500).send("Server error");
