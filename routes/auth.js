@@ -13,6 +13,7 @@ const router = express.Router();
 router.post(
   "/register",
   [
+    check("name", "Name is required").not().isEmpty(),
     check("username", "Username is required").not().isEmpty(),
     check(
       "password",
@@ -25,7 +26,7 @@ router.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { username, password } = req.body;
+    const { name, username, password } = req.body;
 
     try {
       let user = await User.findOne({ username });
@@ -33,7 +34,7 @@ router.post(
         return res.status(400).json({ msg: "User already exists" });
       }
 
-      user = new User({ username, password });
+      user = new User({ name, username, password });
 
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(password, salt);
